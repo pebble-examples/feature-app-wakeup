@@ -4,7 +4,8 @@
 
 static Window *s_menu_window, *s_countdown_window, *s_wakeup_window;
 static MenuLayer *s_menu_layer;
-static TextLayer *s_error_text_layer, *s_tea_text_layer, *s_countdown_text_layer, *s_cancel_text_layer;
+static TextLayer *s_error_text_layer, *s_tea_text_layer, *s_countdown_text_layer, 
+                 *s_cancel_text_layer;
 static BitmapLayer *s_bitmap_layer;
 static GBitmap *s_tea_bitmap;
 
@@ -34,7 +35,8 @@ enum {
   PERSIST_WAKEUP // Persistent storage key for wakeup_id
 };
 
-static void select_callback(struct MenuLayer *s_menu_layer, MenuIndex *cell_index, void *callback_context) {
+static void select_callback(struct MenuLayer *s_menu_layer, MenuIndex *cell_index, 
+                            void *callback_context) {
   // If we were displaying s_error_text_layer, remove it and return
   if (!layer_get_hidden(text_layer_get_layer(s_error_text_layer))) {
     layer_set_hidden(text_layer_get_layer(s_error_text_layer), true);
@@ -62,20 +64,30 @@ static void select_callback(struct MenuLayer *s_menu_layer, MenuIndex *cell_inde
   window_stack_push(s_countdown_window, false);
 }
 
-static uint16_t get_sections_count_callback(struct MenuLayer *menulayer, uint16_t section_index, void *callback_context) {
+static uint16_t get_sections_count_callback(struct MenuLayer *menulayer, uint16_t section_index, 
+                                            void *callback_context) {
   int count = sizeof(tea_array) / sizeof(TeaInfo);
   return count;
 }
 
-static void draw_row_handler(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *callback_context) {
+#ifdef PBL_ROUND
+static int16_t get_cell_height_callback(MenuLayer *menu_layer, MenuIndex *cell_index, 
+                                        void *callback_context) {
+  return 60;
+}
+#endif
+
+static void draw_row_handler(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, 
+                             void *callback_context) {
   char* name = tea_array[cell_index->row].name;
   int text_gap_size = TEA_TEXT_GAP - strlen(name);
   int mins = tea_array[cell_index->row].mins;
 
   // Using simple space padding between name and s_tea_text for appearance of edge-alignment
-  snprintf(s_tea_text, sizeof(s_tea_text), "%s%*s%d min", name, text_gap_size, "", mins);
-
-  menu_cell_basic_draw(ctx, cell_layer, s_tea_text, NULL, NULL);
+  snprintf(s_tea_text, sizeof(s_tea_text), "%s%*s%d min", PBL_IF_ROUND_ELSE("", name), 
+           PBL_IF_ROUND_ELSE(0, text_gap_size), "", mins);
+  menu_cell_basic_draw(ctx, cell_layer, PBL_IF_ROUND_ELSE(name, s_tea_text), 
+                       PBL_IF_ROUND_ELSE(s_tea_text, NULL), NULL);
 }
 
 static void menu_window_load(Window *window) {
@@ -85,6 +97,7 @@ static void menu_window_load(Window *window) {
   s_menu_layer = menu_layer_create(bounds);
   menu_layer_set_callbacks(s_menu_layer, NULL, (MenuLayerCallbacks){
     .get_num_rows = get_sections_count_callback,
+    .get_cell_height = PBL_IF_ROUND_ELSE(get_cell_height_callback, NULL),
     .draw_row = draw_row_handler,
     .select_click = select_callback
   }); 
