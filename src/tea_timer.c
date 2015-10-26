@@ -83,14 +83,11 @@ static void draw_row_handler(GContext *ctx, const Layer *cell_layer, MenuIndex *
   int text_gap_size = TEA_TEXT_GAP - strlen(name);
   int mins = tea_array[cell_index->row].mins;
 
-#ifdef PBL_ROUND
-  snprintf(s_tea_text, sizeof(s_tea_text), "%d min", mins);
-  menu_cell_basic_draw(ctx, cell_layer, name, s_tea_text, NULL);
-#else
   // Using simple space padding between name and s_tea_text for appearance of edge-alignment
-  snprintf(s_tea_text, sizeof(s_tea_text), "%s%*s%d min", name, text_gap_size, "", mins);
-  menu_cell_basic_draw(ctx, cell_layer, s_tea_text, NULL, NULL);
-#endif
+  snprintf(s_tea_text, sizeof(s_tea_text), "%s%*s%d min", PBL_IF_ROUND_ELSE("", name), 
+           PBL_IF_ROUND_ELSE(0, text_gap_size), "", mins);
+  menu_cell_basic_draw(ctx, cell_layer, PBL_IF_ROUND_ELSE(name, s_tea_text), 
+                       PBL_IF_ROUND_ELSE(s_tea_text, NULL), NULL);
 }
 
 static void menu_window_load(Window *window) {
@@ -100,9 +97,7 @@ static void menu_window_load(Window *window) {
   s_menu_layer = menu_layer_create(bounds);
   menu_layer_set_callbacks(s_menu_layer, NULL, (MenuLayerCallbacks){
     .get_num_rows = get_sections_count_callback,
-  #ifdef PBL_ROUND
-    .get_cell_height = get_cell_height_callback,
-  #endif
+    .get_cell_height = PBL_IF_ROUND_ELSE(get_cell_height_callback, NULL),
     .draw_row = draw_row_handler,
     .select_click = select_callback
   }); 
