@@ -15,12 +15,12 @@
     "media": [
       {
         "menuIcon": true,
-        "type": "png",
+        "type": "bitmap",
         "name": "IMAGE_ICON",
         "file": "cup_icon.png"
       },
       {
-        "type": "png",
+        "type": "bitmap",
         "name": "TEA_SIGN",
         "file": "tea-sign.png"
       }
